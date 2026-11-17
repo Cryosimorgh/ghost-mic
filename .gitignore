@@ -1,0 +1,17 @@
+bin/
+obj/
+dist/
+data/
+.setup/
+*-result.txt
+devices.json
+smoke-test.png
+smoke-test-compact.png
+smoke-test-mic.png
+smoke-test-menu.png
+capture-test.wav
+desktop-integration-result.json
+artifacts/
+*.wav
+.vs/
+*.user
