@@ -66,7 +66,7 @@ public sealed partial class MainWindow
         main.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 57)); main.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 12)); main.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 43));
         var gainCard = new Card { Dock = DockStyle.Fill, Margin = Padding.Empty };
         var gainCaption = LabelAt("GAIN", 8, Theme.Muted, true); gainCaption.SetBounds(22, 16, 240, 20);
-        gainReadout.Font = new Font("Consolas", 40); gainReadout.ForeColor = Theme.Text; gainReadout.BackColor = Theme.Panel;
+        gainReadout.Font = new Font("Segoe UI Light", 44); gainReadout.ForeColor = Theme.Text; gainReadout.BackColor = Theme.Panel;
         gainReadout.SetBounds(16, 35, 340, 76);
         gain.BackColor = Theme.Panel;
         gainCard.Controls.AddRange([gainCaption, gainReadout, gain]);
@@ -167,7 +167,7 @@ public sealed partial class MainWindow
         bool active = engine.Running;
         string label = !active ? "●  Standby" : mute.Checked ? "●  Muted" : testing ? "●  Testing" : "●  Live";
         if (sessionBadge.Text != label) sessionBadge.Text = label;
-        sessionBadge.ForeColor = active && !mute.Checked ? Color.FromArgb(153, 174, 156) : Theme.Muted;
+        sessionBadge.ForeColor = active && !mute.Checked ? Theme.Accent : Theme.Muted;
         noticeTitle.Text = active ? testing ? "Microphone test" : mute.Checked ? "Microphone muted" : "Signal path active" : output.Items.Count == 0 ? "Virtual device required" : "Signal path ready";
         noticeAction.Text = output.Items.Count == 0 ? "Install virtual device" : "Setup guide";
         hints.SetToolTip(reduction, engine.InputClipped ? "The physical mic is clipping. Lower its Windows input level." : $"Limiter gain reduction: {engine.ReductionDb:0.0} dB. Output buffer recoveries: {engine.BufferResets}. {engine.FormatDescription}");

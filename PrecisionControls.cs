@@ -26,7 +26,7 @@ public sealed class GhostMenu : ContextMenuStrip
         protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
         {
             if (!e.Item.Selected || !e.Item.Enabled) return;
-            using var brush = new SolidBrush(Color.FromArgb(45, 46, 47));
+            using var brush = new SolidBrush(Theme.Selection);
             e.Graphics.FillRectangle(brush, new Rectangle(0, 0, e.Item.Width, e.Item.Height));
         }
         protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e) =>

@@ -5,10 +5,13 @@ namespace GhostMic;
 
 internal static class Theme
 {
-    public static readonly Color Background = Color.FromArgb(17, 18, 19), Panel = Color.FromArgb(24, 25, 26),
-        Field = Color.FromArgb(30, 31, 32), Border = Color.FromArgb(52, 53, 54),
-        Text = Color.FromArgb(233, 230, 224), Muted = Color.FromArgb(152, 151, 147),
-        Accent = Color.FromArgb(211, 204, 191), Warning = Color.FromArgb(210, 175, 123);
+    public static readonly Color Background = Color.FromArgb(18, 21, 21), Panel = Color.FromArgb(28, 32, 32),
+        Field = Color.FromArgb(35, 40, 39), Border = Color.FromArgb(57, 66, 62),
+        Text = Color.FromArgb(240, 237, 229), Muted = Color.FromArgb(158, 170, 161),
+        Accent = Color.FromArgb(142, 202, 172), Warning = Color.FromArgb(210, 175, 123),
+        Primary = Color.FromArgb(40, 85, 66), PrimaryHover = Color.FromArgb(48, 101, 78),
+        AccentEdge = Color.FromArgb(85, 132, 109), Selection = Color.FromArgb(35, 57, 46),
+        Highlight = Color.FromArgb(72, 80, 77);
     public static GraphicsPath Round(RectangleF rect, float radius = 10)
     {
         var path = new GraphicsPath(); float d = radius * 2;
@@ -18,6 +21,13 @@ internal static class Theme
     }
     public static void Fill(Graphics g, Color color, RectangleF rect, float radius = 10)
     { using var path = Round(rect, radius); using var brush = new SolidBrush(color); g.FillPath(brush, path); }
+    public static void Satin(Graphics g, Color color, RectangleF rect, float radius = 4)
+    {
+        using var path = Round(rect, radius);
+        var top = Color.FromArgb(Math.Min(255, color.R+6), Math.Min(255, color.G+6), Math.Min(255, color.B+6));
+        using var brush = new LinearGradientBrush(rect, top, color, LinearGradientMode.Vertical);
+        g.FillPath(brush, path);
+    }
     public static void Outline(Graphics g, Color color, RectangleF rect, float radius = 10)
     { using var path = Round(rect, radius); using var pen = new Pen(color); g.DrawPath(pen, path); }
     public static void TextAt(Graphics g, string text, Font font, Color color, Rectangle rect, TextFormatFlags extra = TextFormatFlags.Left)
@@ -28,7 +38,13 @@ public class Card : Panel
 {
     public Card() { DoubleBuffered = true; BackColor = Theme.Background; Padding = new Padding(22); }
     protected override void OnPaintBackground(PaintEventArgs e)
-    { e.Graphics.Clear(BackColor); e.Graphics.SmoothingMode = SmoothingMode.AntiAlias; Theme.Fill(e.Graphics, Theme.Panel, new RectangleF(0, 0, Width-1, Height-1), 4); Theme.Outline(e.Graphics, Theme.Border, new RectangleF(0.5f, .5f, Width-1, Height-1), 4); }
+    {
+        e.Graphics.Clear(BackColor); e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        Theme.Fill(e.Graphics, Theme.Panel, new RectangleF(0, 0, Width-1, Height-1), 6);
+        Theme.Outline(e.Graphics, Theme.Border, new RectangleF(.5f, .5f, Width-1, Height-1), 6);
+        using var highlight = new Pen(Theme.Highlight);
+        e.Graphics.DrawLine(highlight, 7, 1, Width-8, 1);
+    }
 }
 
 public class GhostButton : Button
@@ -51,11 +67,12 @@ public class GhostButton : Button
     protected override void OnPaint(PaintEventArgs e)
     {
         var g = e.Graphics; g.Clear(BackColor); g.SmoothingMode = SmoothingMode.AntiAlias;
-        Color fill = Primary && Enabled ? Theme.Accent : Selected ? Color.FromArgb(48, 46, 42) : hover && Enabled ? Color.FromArgb(43, 44, 45) : Theme.Field;
+        Color fill = Primary && Enabled ? hover ? Theme.PrimaryHover : Theme.Primary : Selected ? Theme.Selection : hover && Enabled ? Color.FromArgb(43, 54, 47) : Theme.Field;
         if (Quiet && !hover) fill = BackColor;
-        Theme.Fill(g, fill, new RectangleF(.5f, .5f, Width-1, Height-1), 4);
-        if (!Quiet) Theme.Outline(g, Selected ? Color.FromArgb(119, 113, 102) : Primary && Enabled ? Theme.Accent : Theme.Border, new RectangleF(.5f, .5f, Width-1, Height-1), 4);
-        Theme.TextAt(g, Text, Font, !Enabled ? Color.FromArgb(106, 106, 104) : Primary ? Theme.Background : Selected ? Theme.Accent : Theme.Text,
+        if (Quiet && !hover) Theme.Fill(g, fill, new RectangleF(.5f, .5f, Width-1, Height-1), 4);
+        else Theme.Satin(g, fill, new RectangleF(.5f, .5f, Width-1, Height-1));
+        if (!Quiet) Theme.Outline(g, Selected || Primary && Enabled ? Theme.AccentEdge : Theme.Border, new RectangleF(.5f, .5f, Width-1, Height-1), 4);
+        Theme.TextAt(g, Text, Font, !Enabled ? Color.FromArgb(110, 122, 113) : Selected ? Theme.Accent : Theme.Text,
             ClientRectangle, TextFormatFlags.HorizontalCenter);
         if (Focused && ShowFocusCues) Theme.Outline(g, Theme.Muted, new RectangleF(3.5f, 3.5f, Width-7, Height-7), 2);
     }
@@ -111,7 +128,7 @@ public class DeviceSelector : Button
     {
         var g = e.Graphics; g.Clear(BackColor); g.SmoothingMode = SmoothingMode.AntiAlias;
         Theme.Fill(g, Theme.Field, new RectangleF(.5f, .5f, Width-1, Height-1), 4);
-        Theme.Outline(g, Focused ? Color.FromArgb(124, 119, 109) : Theme.Border, new RectangleF(.5f, .5f, Width-1, Height-1), 4);
+        Theme.Outline(g, Focused ? Theme.AccentEdge : Theme.Border, new RectangleF(.5f, .5f, Width-1, Height-1), 4);
         Theme.TextAt(g, SelectedItem?.Name ?? Placeholder, Font, !Enabled || SelectedItem == null ? Theme.Muted : Theme.Text, new Rectangle(14, 0, Width-48, Height));
         using var pen = new Pen(Theme.Muted, 1.6f);
         g.DrawLines(pen, [new Point(Width-26, Height/2-2), new Point(Width-21, Height/2+3), new Point(Width-16, Height/2-2)]);
@@ -136,8 +153,9 @@ public class GhostToggle : CheckBox
     {
         var g = e.Graphics; g.Clear(BackColor); g.SmoothingMode = SmoothingMode.AntiAlias;
         int y = (Height-22)/2;
-        Theme.Fill(g, Checked ? Theme.Accent : Color.FromArgb(62, 63, 64), new RectangleF(0, y, 34, 18), 9);
-        using var brush = new SolidBrush(Checked ? Theme.Background : Theme.Text);
+        Theme.Fill(g, Checked ? Theme.Primary : Color.FromArgb(60, 69, 63), new RectangleF(0, y, 34, 18), 9);
+        Theme.Outline(g, Checked ? Theme.AccentEdge : Theme.Border, new RectangleF(.5f, y+.5f, 33, 17), 8.5f);
+        using var brush = new SolidBrush(Checked ? Theme.Accent : Theme.Text);
         g.FillEllipse(brush, Checked ? 19 : 3, y+3, 12, 12);
         Theme.TextAt(g, Text, Font, Enabled ? Theme.Text : Theme.Muted, new Rectangle(46, 0, Width-46, Height));
         if (Focused && ShowFocusCues) Theme.Outline(g, Theme.Muted, new RectangleF(.5f, .5f, Width-1, Height-1), 3);
@@ -162,10 +180,10 @@ public class GainSlider : Control
     {
         var g = e.Graphics; g.Clear(BackColor); g.SmoothingMode = SmoothingMode.AntiAlias;
         int left = 12, width = Width-24; float x = left + width * (Value-Minimum)/(float)(Maximum-Minimum);
-        Theme.Fill(g, Color.FromArgb(58, 59, 60), new RectangleF(left, 17, width, 3), 1.5f);
+        Theme.Fill(g, Color.FromArgb(57, 68, 61), new RectangleF(left, 17, width, 3), 1.5f);
         if (x > left) Theme.Fill(g, Theme.Accent, new RectangleF(left, 17, Math.Max(3, x-left), 3), 1.5f);
-        using var accent = new SolidBrush(Theme.Accent); g.FillEllipse(accent, x-9, 9, 18, 18);
-        using var center = new SolidBrush(Theme.Panel); g.FillEllipse(center, x-3, 15, 6, 6);
+        using var accent = new SolidBrush(Theme.Text); g.FillEllipse(accent, x-9, 9, 18, 18);
+        using var center = new SolidBrush(Theme.Primary); g.FillEllipse(center, x-3, 15, 6, 6);
         using var labelFont = new Font("Segoe UI", 8);
         foreach (int tick in new[] { -24, 0, 24, 48, 72, 96 })
         {
@@ -202,7 +220,7 @@ public sealed class LevelMeter : Control
         for (int i = 0; i < segments; i++)
         {
             bool lit = i/(float)segments < Math.Clamp((db+60)/60, 0, 1);
-            Color color = !lit ? Color.FromArgb(49, 50, 51) : i > 29 ? Color.FromArgb(198, 115, 105) : i > 25 ? Theme.Warning : Theme.Accent;
+            Color color = !lit ? Color.FromArgb(50, 62, 54) : i > 29 ? Color.FromArgb(198, 115, 105) : i > 25 ? Theme.Warning : Theme.Accent;
             using var brush = new SolidBrush(color); g.FillRectangle(brush, i*segment, 6, Math.Max(1, segment-3), 17);
         }
         using var small = new Font("Segoe UI", 8);
