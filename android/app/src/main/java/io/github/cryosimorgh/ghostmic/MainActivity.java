@@ -16,7 +16,7 @@ import java.io.*;
 import java.util.*;
 
 public final class MainActivity extends Activity {
-    static final int INPUT_ID=0x1010001, START_ID=0x1010002, STOP_ID=0x1010003, ISOLATION_ID=0x1010004;
+    static final int INPUT_ID=0x1010001, START_ID=0x1010002, STOP_ID=0x1010003, ISOLATION_ID=0x1010004, DIRECTION_ID=0x1010005;
     private static final int BG=Color.rgb(18,21,21), PANEL=Color.rgb(28,32,32), FIELD=Color.rgb(35,40,39), BORDER=Color.rgb(57,66,62),
         TEXT=Color.rgb(240,237,229), MUTED=Color.rgb(158,170,161), GREEN=Color.rgb(142,202,172), PRIMARY=Color.rgb(40,85,66), WARNING=Color.rgb(210,175,123);
     private final Handler handler=new Handler(Looper.getMainLooper());
@@ -56,7 +56,7 @@ public final class MainActivity extends Activity {
         chooseInput=button("Choose microphone",false); chooseInput.setId(INPUT_ID); chooseInput.setOnClickListener(view -> pickDevice(true)); source.addView(chooseInput,wide(44));
         actualInput=text("Active input appears after you start",13,GREEN); source.addView(actualInput); space(source,4);
         activeMicrophones=text("",11,MUTED); source.addView(activeMicrophones);
-        direction=button("Direction: Automatic",false); direction.setOnClickListener(view -> pickDirection()); if(Build.VERSION.SDK_INT>=29) { space(source,8); source.addView(direction,wide(36)); }
+        direction=button("Direction: Automatic",false); direction.setId(DIRECTION_ID); direction.setOnClickListener(view -> pickDirection()); if(Build.VERSION.SDK_INT>=29) { space(source,8); source.addView(direction,wide(36)); }
 
         LinearLayout gain=card(root); gain.addView(text("GAIN",10,MUTED)); gainValue=text("+6 dB",40,TEXT); gainValue.setTypeface(Typeface.create("sans-serif-light",Typeface.NORMAL)); gain.addView(gainValue);
         SeekBar slider=new SeekBar(this); slider.setMax(120); slider.setProgress(preferences.getInt("gain",6)+24);
@@ -121,9 +121,9 @@ public final class MainActivity extends Activity {
         showDialog(builder.create());
     }
     private void pickDirection() {
-        String[] labels={"Automatic","Toward you","Away from you","External"};
+        String[] labels={"Automatic\nLet Android choose","Toward you\nPreference; support varies","Away from you\nPreference; support varies","External\nUse a supported external-facing array"};
         showDialog(new AlertDialog.Builder(this).setTitle("Microphone direction preference").setSingleChoiceItems(labels,preferences.getInt("direction",0),(dialog,index) -> { preferences.edit().putInt("direction",index).apply(); refreshDevices(); dialog.dismiss(); })
-            .setMessage("Supported on some phone microphone arrays. This is a preference; Android may ignore it.").setNegativeButton("Close",null).create());
+            .setNegativeButton("Close",null).create());
     }
     private void requestCapture(boolean save) {
         pendingRecord=save; List<String> missing=new ArrayList<>();

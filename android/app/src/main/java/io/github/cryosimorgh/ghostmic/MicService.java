@@ -29,7 +29,7 @@ public final class MicService extends Service {
         if (STOP.equals(intent.getAction())) { if (engine!=null) engine.stop(); stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); return START_NOT_STICKY; }
         if (UPDATE.equals(intent.getAction())) { if (config!=null) updateConfig(intent); return START_NOT_STICKY; }
         if (RECORD.equals(intent.getAction()) && engine!=null) {
-            try { engine.beginRecording(newRecording()); } catch (Exception error) { state=MicEngine.State.idle(error.getMessage(),null); engine.stop(); }
+            try { engine.beginRecording(newRecording()); } catch (Exception error) { engine.stop(); state=MicEngine.State.idle("Could not start recording: "+error.getMessage(),state.recordingFile); }
             return START_NOT_STICKY;
         }
         if (!START.equals(intent.getAction())) { stopSelf(); return START_NOT_STICKY; }

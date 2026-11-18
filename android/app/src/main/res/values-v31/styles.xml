@@ -1,0 +1,8 @@
+<resources>
+    <style name="AppTheme" parent="BaseAppTheme">
+        <item name="android:windowSplashScreenBackground">#121515</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ghost_icon</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#121515</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+    </style>
+</resources>

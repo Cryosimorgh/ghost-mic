@@ -1,5 +1,5 @@
 <resources>
-    <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
+    <style name="BaseAppTheme" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowBackground">#121515</item>
@@ -9,4 +9,5 @@
         <item name="android:statusBarColor">#121515</item>
         <item name="android:navigationBarColor">#121515</item>
     </style>
+    <style name="AppTheme" parent="BaseAppTheme" />
 </resources>

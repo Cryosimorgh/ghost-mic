@@ -99,9 +99,8 @@ jobs:
             adb shell am instrument -w -r io.github.cryosimorgh.ghostmic.test/androidx.test.runner.AndroidJUnitRunner > instrumentation-result.txt
             cat instrumentation-result.txt
             grep -q 'OK (' instrumentation-result.txt
-            adb shell am start -n io.github.cryosimorgh.ghostmic/.MainActivity
-            sleep 2
-            adb exec-out screencap -p > GhostMic-android.png
+            adb exec-out run-as io.github.cryosimorgh.ghostmic cat files/interface.png > GhostMic-android.png
+            adb exec-out run-as io.github.cryosimorgh.ghostmic cat files/inputs.png > GhostMic-android-inputs.png
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
@@ -109,3 +108,4 @@ jobs:
           path: |
             instrumentation-result.txt
             GhostMic-android.png
+            GhostMic-android-inputs.png

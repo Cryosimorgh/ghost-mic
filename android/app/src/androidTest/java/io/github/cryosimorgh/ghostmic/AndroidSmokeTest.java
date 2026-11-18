@@ -6,12 +6,55 @@ import android.widget.Button;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.SdkSuppress;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class)
 public class AndroidSmokeTest {
+    private static void screenshot(String name) throws Exception {
+        var instrumentation=InstrumentationRegistry.getInstrumentation(); instrumentation.waitForIdleSync(); Thread.sleep(500);
+        android.graphics.Bitmap bitmap=instrumentation.getUiAutomation().takeScreenshot(); assertNotNull(bitmap);
+        try(var output=new java.io.FileOutputStream(new java.io.File(instrumentation.getTargetContext().getFilesDir(),name))) { assertTrue(bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,output)); }
+        bitmap.recycle();
+    }
+    private static boolean clickText(String text) throws Exception {
+        var automation=InstrumentationRegistry.getInstrumentation().getUiAutomation();
+        long until=android.os.SystemClock.elapsedRealtime()+4000;
+        while(android.os.SystemClock.elapsedRealtime()<until) {
+            var root=automation.getRootInActiveWindow();
+            if(root!=null) for(var match:root.findAccessibilityNodeInfosByText(text)) {
+                var node=match; while(node!=null && !node.isClickable()) node=node.getParent();
+                if(node!=null && node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)) return true;
+            }
+            Thread.sleep(100);
+        }
+        return false;
+    }
+    @Test public void renderInterfaceAndSelectInput() throws Exception {
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)) {
+            final String[] original={""};
+            scenario.onActivity(activity -> original[0]=activity.getSharedPreferences("ghost-mic",0).getString("input",""));
+            screenshot("interface.png");
+            scenario.onActivity(activity -> activity.findViewById(MainActivity.INPUT_ID).performClick());
+            screenshot("inputs.png"); assertTrue("Automatic input choice should be clickable",clickText("Automatic"));
+            scenario.onActivity(activity -> {
+                assertEquals("",activity.getSharedPreferences("ghost-mic",0).getString("input","missing"));
+                activity.getSharedPreferences("ghost-mic",0).edit().putString("input",original[0]).apply();
+            });
+        }
+    }
+    @Test @SdkSuppress(minSdkVersion=29) public void directionPreferenceIsSelectable() throws Exception {
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> activity.findViewById(MainActivity.DIRECTION_ID).performClick());
+            assertTrue("Toward-you direction should be visible and clickable",clickText("Toward you"));
+            scenario.onActivity(activity -> {
+                assertEquals(1,activity.getSharedPreferences("ghost-mic",0).getInt("direction",-1));
+                activity.getSharedPreferences("ghost-mic",0).edit().putInt("direction",0).apply();
+            });
+        }
+    }
     @Test public void bundledNativeDenoiserSuppressesStationaryNoise() {
         java.util.Random random=new java.util.Random(7); double inputEnergy=0, outputEnergy=0;
         try(NativeDenoiser denoiser=new NativeDenoiser()) {
@@ -42,8 +85,8 @@ public class AndroidSmokeTest {
                 activity.findViewById(MainActivity.START_ID).performClick();
             });
             long until=android.os.SystemClock.elapsedRealtime()+8000;
-            while(!MicService.state.running && android.os.SystemClock.elapsedRealtime()<until) Thread.sleep(100);
-            assertTrue("Capture should start: "+MicService.state.message,MicService.state.running);
+            while(!MicService.state.message.contains("RNNoise") && android.os.SystemClock.elapsedRealtime()<until) Thread.sleep(100);
+            assertTrue("Capture should process actual frames: "+MicService.state.message,MicService.state.running && MicService.state.message.contains("RNNoise"));
             Thread.sleep(800);
             assertTrue("Capture should stay active: "+MicService.state.message,MicService.state.running);
             scenario.onActivity(activity -> {
