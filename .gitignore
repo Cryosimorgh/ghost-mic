@@ -15,3 +15,6 @@ artifacts/
 *.wav
 .vs/
 *.user
+*.apk
+*.p12
+*.jks
