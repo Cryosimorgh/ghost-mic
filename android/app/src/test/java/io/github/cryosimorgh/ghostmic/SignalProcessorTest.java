@@ -6,6 +6,12 @@ import java.io.*;
 import java.nio.*;
 
 public class SignalProcessorTest {
+    @Test public void onlyPhysicalRecordingSourcesAreOffered() {
+        assertTrue(Devices.physicalInputType(android.media.AudioDeviceInfo.TYPE_BUILTIN_MIC));
+        assertTrue(Devices.physicalInputType(android.media.AudioDeviceInfo.TYPE_USB_DEVICE));
+        assertFalse(Devices.physicalInputType(android.media.AudioDeviceInfo.TYPE_TELEPHONY));
+        assertFalse(Devices.physicalInputType(android.media.AudioDeviceInfo.TYPE_REMOTE_SUBMIX));
+    }
     @Test public void quietSignalGetsExtendedGain() {
         SignalProcessor processor=new SignalProcessor(); float[] frame=new float[480];
         for(int batch=0;batch<100;batch++) { java.util.Arrays.fill(frame,.000001f); processor.amplify(frame,96,false); }

@@ -2,6 +2,8 @@
 
 Android companion to [Ghost Mic for Windows](https://github.com/Cryosimorgh/ghost-mic) and the [Ghost chat project](https://github.com/Cryosimorgh/Ghost). The app emphasizes input selection, reports the microphone Android actually uses, and processes audio locally.
 
+[App screenshot](https://raw.githubusercontent.com/Cryosimorgh/ghost-mic/main/docs/android.png) · [Input selector](https://raw.githubusercontent.com/Cryosimorgh/ghost-mic/main/docs/android-inputs.png)
+
 **Stock Android does not let a normal app register a virtual microphone for Discord or other apps.** This version records and monitors inside Ghost Mic. It does not change other apps' input routing or bypass Android's microphone arbitration. It requires no root and does not claim a system-wide default-mic feature.
 
 ## Install

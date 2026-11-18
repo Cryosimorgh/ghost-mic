@@ -114,7 +114,7 @@ public final class MainActivity extends Activity {
         String[] labels=new String[available.size()+1]; labels[0]=input?"Automatic\nAndroid chooses the input":"System playback\nAndroid chooses the output"; int checked=0;
         for(int i=0;i<available.size();i++) { AudioDeviceInfo device=available.get(i); labels[i+1]=Devices.name(device)+"\n"+Devices.detail(device); if(Devices.key(device).equals(selected)) checked=i+1; }
         AlertDialog.Builder builder=new AlertDialog.Builder(this).setTitle(input?"Choose microphone":"Choose playback device")
-            .setSingleChoiceItems(labels,checked,(dialog,index) -> { String key=index==0?"":Devices.key(available.get(index-1)); preferences.edit().putString(input?"input":"output",key).apply(); refreshDevices(); dialog.dismiss(); });
+            .setSingleChoiceItems(choiceAdapter(labels),checked,(dialog,index) -> { String key=index==0?"":Devices.key(available.get(index-1)); preferences.edit().putString(input?"input":"output",key).apply(); refreshDevices(); dialog.dismiss(); });
         builder.setNegativeButton("Close",null).setNeutralButton("Refresh",(dialog,which) -> pickDevice(input));
         if(input && Build.VERSION.SDK_INT>=31 && checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)!=PackageManager.PERMISSION_GRANTED)
             builder.setPositiveButton("Bluetooth access",(dialog,which) -> { pendingPicker=true; requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT},42); });
@@ -122,7 +122,7 @@ public final class MainActivity extends Activity {
     }
     private void pickDirection() {
         String[] labels={"Automatic\nLet Android choose","Toward you\nPreference; support varies","Away from you\nPreference; support varies","External\nUse a supported external-facing array"};
-        showDialog(new AlertDialog.Builder(this).setTitle("Microphone direction preference").setSingleChoiceItems(labels,preferences.getInt("direction",0),(dialog,index) -> { preferences.edit().putInt("direction",index).apply(); refreshDevices(); dialog.dismiss(); })
+        showDialog(new AlertDialog.Builder(this).setTitle("Microphone direction preference").setSingleChoiceItems(choiceAdapter(labels),preferences.getInt("direction",0),(dialog,index) -> { preferences.edit().putInt("direction",index).apply(); refreshDevices(); dialog.dismiss(); })
             .setNegativeButton("Close",null).create());
     }
     private void requestCapture(boolean save) {
@@ -160,7 +160,7 @@ public final class MainActivity extends Activity {
         start.setEnabled(!state.running); stop.setEnabled(state.running); chooseInput.setEnabled(!state.running); chooseOutput.setEnabled(!state.running); direction.setEnabled(!state.running);
         record.setEnabled(!state.recording); record.setText(state.recording?"Recording…":"Record WAV");
         actualInput.setText(state.running?"Active: "+state.actualInput:"Active input appears after you start");
-        activeMicrophones.setText(state.microphoneInfo); inputMeter.peak=state.inputPeak; outputMeter.peak=state.outputPeak; inputMeter.invalidate(); outputMeter.invalidate();
+        activeMicrophones.setText(state.microphoneInfo); activeMicrophones.setVisibility(state.microphoneInfo.isEmpty()?View.GONE:View.VISIBLE); inputMeter.peak=state.inputPeak; outputMeter.peak=state.outputPeak; inputMeter.invalidate(); outputMeter.invalidate();
         limiter.setText(String.format(Locale.US,"Limiter %.1f dB%s",state.limiter,state.inputPeak>=.999f?" · input clipping":""));
         badge.setText(state.running?(mute.isChecked()?"● Muted":state.recording?"● Recording":"● Live"):"● Standby"); badge.setTextColor(state.running?GREEN:MUTED);
         status.setText(state.message);
@@ -196,7 +196,24 @@ public final class MainActivity extends Activity {
         view.setTrackTintList(new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{PRIMARY,BORDER}));
         view.setOnCheckedChangeListener((button,checked)->{ preferences.edit().putBoolean(key,checked).apply(); updateProcessing(); }); return view;
     }
-    private void showDialog(AlertDialog dialog) { dialog.show(); if(dialog.getWindow()!=null) dialog.getWindow().setBackgroundDrawable(shape(PANEL)); for(int which:new int[]{-1,-2,-3}) { Button button=dialog.getButton(which); if(button!=null) button.setTextColor(GREEN); } }
+    private ArrayAdapter<String> choiceAdapter(String[] labels) {
+        return new ArrayAdapter<String>(this,android.R.layout.simple_list_item_single_choice,labels) {
+            public View getView(int position,View previous,ViewGroup parent) {
+                CheckedTextView view=(CheckedTextView)super.getView(position,previous,parent);
+                view.setSingleLine(false); view.setMinLines(2); view.setMaxLines(4); view.setTextSize(15); view.setTextColor(TEXT);
+                view.setPadding(dp(16),dp(10),dp(16),dp(10)); view.setMinHeight(dp(64));
+                view.setLayoutParams(new AbsListView.LayoutParams(-1,-2));
+                view.setCheckMarkTintList(new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{GREEN,MUTED}));
+                android.text.SpannableString label=new android.text.SpannableString(labels[position]); int split=labels[position].indexOf('\n');
+                if(split>=0) {
+                    label.setSpan(new android.text.style.ForegroundColorSpan(MUTED),split+1,label.length(),0);
+                    label.setSpan(new android.text.style.AbsoluteSizeSpan(12,true),split+1,label.length(),0);
+                }
+                view.setText(label); return view;
+            }
+        };
+    }
+    private void showDialog(AlertDialog dialog) { dialog.show(); if(dialog.getWindow()!=null) dialog.getWindow().setBackgroundDrawable(shape(PANEL)); for(int which:new int[]{-1,-2,-3}) { Button button=dialog.getButton(which); if(button!=null) { button.setTextColor(GREEN); button.setAllCaps(false); button.setTextSize(13); } } }
     private LinearLayout column() { LinearLayout view=new LinearLayout(this); view.setOrientation(LinearLayout.VERTICAL); return view; }
     private LinearLayout row() { LinearLayout view=new LinearLayout(this); view.setGravity(Gravity.CENTER_VERTICAL); return view; }
     private LinearLayout card(LinearLayout root) { LinearLayout view=column(); view.setPadding(dp(18),dp(16),dp(18),dp(16)); view.setBackground(shape(PANEL)); LinearLayout.LayoutParams layout=wide(-2); layout.bottomMargin=dp(12); root.addView(view,layout); return view; }

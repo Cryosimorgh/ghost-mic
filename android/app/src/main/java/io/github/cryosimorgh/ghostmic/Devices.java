@@ -12,13 +12,22 @@ final class Devices {
         List<AudioDeviceInfo> result = new ArrayList<>();
         try {
             for (AudioDeviceInfo device : manager.getDevices(input ? AudioManager.GET_DEVICES_INPUTS : AudioManager.GET_DEVICES_OUTPUTS))
-                if (input ? device.isSource() : device.isSink()) result.add(device);
+                if (input ? device.isSource() && physicalInputType(device.getType()) : device.isSink()) result.add(device);
         } catch (SecurityException ignored) { }
         result.sort((a,b) -> Integer.compare(priority(a.getType()), priority(b.getType())));
         return result;
     }
     private static int priority(int type) { return type == AudioDeviceInfo.TYPE_BUILTIN_MIC ? 0 : type == AudioDeviceInfo.TYPE_USB_DEVICE || type == AudioDeviceInfo.TYPE_USB_HEADSET ? 1 : bluetooth(type) ? 3 : 2; }
     static boolean bluetooth(int type) { return type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO || Build.VERSION.SDK_INT>=31 && type == AudioDeviceInfo.TYPE_BLE_HEADSET; }
+    static boolean physicalInputType(int type) {
+        if(bluetooth(type)) return true;
+        return switch(type) {
+            case AudioDeviceInfo.TYPE_BUILTIN_MIC, AudioDeviceInfo.TYPE_WIRED_HEADSET, AudioDeviceInfo.TYPE_USB_DEVICE,
+                AudioDeviceInfo.TYPE_USB_HEADSET, AudioDeviceInfo.TYPE_USB_ACCESSORY, AudioDeviceInfo.TYPE_LINE_ANALOG,
+                AudioDeviceInfo.TYPE_LINE_DIGITAL, AudioDeviceInfo.TYPE_AUX_LINE -> true;
+            default -> false;
+        };
+    }
     static String type(int type) {
         return switch (type) {
             case AudioDeviceInfo.TYPE_BUILTIN_MIC -> "Phone microphone";
@@ -48,7 +57,7 @@ final class Devices {
     static String detail(AudioDeviceInfo device) {
         int[] rates = device.getSampleRates();
         String rate = rates.length == 0 ? "device-negotiated rate" : Arrays.stream(rates).anyMatch(value -> value == 48000) ? "48 kHz supported" : "rates: "+Arrays.toString(rates);
-        return type(device.getType())+" · "+rate;
+        return (device.getType()==AudioDeviceInfo.TYPE_BUILTIN_MIC?"Built in":type(device.getType()))+" · "+rate;
     }
     static AudioDeviceInfo find(AudioManager manager, boolean input, String key) {
         if (key == null || key.isEmpty()) return null;

@@ -42,7 +42,6 @@ final class MicEngine {
     private File recordingFile;
     private boolean changedMode;
     private int priorMode;
-    private AudioDeviceInfo priorCommunication;
 
     MicEngine(Context context, Config config, Listener listener) { this.context=context; this.config=config; this.listener=listener; manager=context.getSystemService(AudioManager.class); }
     void start(File saveTo) throws IOException {
@@ -65,7 +64,6 @@ final class MicEngine {
         if (wanted != null && Devices.bluetooth(wanted.getType())) {
             priorMode=manager.getMode();
             if (priorMode == AudioManager.MODE_IN_CALL) throw new IllegalStateException("End the phone call before using this microphone.");
-            if (Build.VERSION.SDK_INT >= 31) priorCommunication=manager.getCommunicationDevice();
             changedMode=true; manager.setMode(AudioManager.MODE_IN_COMMUNICATION);
             if (Build.VERSION.SDK_INT >= 31) {
                 AudioDeviceInfo output=manager.getAvailableCommunicationDevices().stream()
@@ -165,7 +163,7 @@ final class MicEngine {
             if (denoiser!=null) denoiser.close(); if (agc!=null) agc.release(); if (suppressor!=null) suppressor.release();
             synchronized(recordingLock) { if (writer!=null) { try { writer.close(); } catch (IOException error) { finalMessage="Could not finalize recording: "+error.getMessage(); } writer=null; } }
             if (changedMode) try {
-                if (Build.VERSION.SDK_INT>=31) { if (priorCommunication!=null) manager.setCommunicationDevice(priorCommunication); else manager.clearCommunicationDevice(); }
+                if (Build.VERSION.SDK_INT>=31) manager.clearCommunicationDevice();
                 else { manager.setBluetoothScoOn(false); manager.stopBluetoothSco(); }
                 manager.setMode(priorMode);
             } catch (RuntimeException ignored) { }
