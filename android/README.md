@@ -41,7 +41,7 @@ No account, Internet permission, cloud model, analytics, external storage permis
 | [AudioRecord routing](https://developer.android.com/reference/android/media/AudioRecord#setPreferredDevice(android.media.AudioDeviceInfo)) | Input preference, routed-device reporting, and microphone direction. |
 | [Android Bluetooth audio](https://developer.android.com/develop/connectivity/bluetooth/ble-audio/overview) | Modern communication-device routing. |
 
-RNNoise v0.1 is a small, self-contained baseline with its model in the source tree; it is not described as the latest or best available model. The full license is bundled in the APK and visible in Help. Upstream source details are in `app/src/main/cpp/rnnoise/SOURCE.md`.
+RNNoise v0.1 is a small, self-contained baseline with its model in the source tree; it is not described as the latest or best available model. Its full BSD license, AndroidX/Kotlin notices, and the Apache 2.0 license are bundled in the APK and visible in Help. Upstream RNNoise source details are in `app/src/main/cpp/rnnoise/SOURCE.md`.
 
 ## Build and checks
 

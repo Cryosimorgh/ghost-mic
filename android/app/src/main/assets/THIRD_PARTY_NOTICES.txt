@@ -1,0 +1,21 @@
+Ghost Mic for Android — third-party notices
+
+RNNoise
+Copyright Mozilla, Jean-Marc Valin, Xiph.Org Foundation, and Mark Borgerding.
+BSD license: full text and copyright dates in RNNoise-LICENSE.txt.
+Source: https://github.com/xiph/rnnoise
+Pinned upstream revision: cdf196b1e9de2f8ff1003328ebf9a4316477429d (v0.1).
+
+AndroidX components
+Copyright The Android Open Source Project and respective contributors.
+Includes core, annotation, lifecycle, arch, startup, tracing, interpolator,
+profileinstaller, and versionedparcelable components pulled by AndroidX Core.
+Apache License, Version 2.0: full text in Apache-2.0.txt.
+Source: https://android.googlesource.com/platform/frameworks/support/
+
+Kotlin standard library and kotlinx.coroutines
+Copyright JetBrains s.r.o. and respective contributors.
+Apache License, Version 2.0: full text in Apache-2.0.txt.
+Sources: https://github.com/JetBrains/kotlin and https://github.com/Kotlin/kotlinx.coroutines
+
+These projects and their contributors do not endorse Ghost Mic.

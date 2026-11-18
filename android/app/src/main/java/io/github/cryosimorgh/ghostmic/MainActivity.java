@@ -182,11 +182,13 @@ public final class MainActivity extends Activity {
     }
     private void showHelp() {
         String explanation="INPUT SELECTION\nPhone, USB, wired, and Bluetooth inputs are shown when Android exposes them. Bluetooth may need permission and an active headset connection. Stop capture before changing devices. The Active label reports the real route; capture stops if Android ignores an explicitly selected input.\n\nVOICE ISOLATION\nRNNoise reduces background noise locally. It does not identify one speaker or reliably remove other people's voices. No network or account is required.\n\nANDROID LIMIT\nThis app cannot become a system-wide virtual microphone for Discord or other apps on stock Android. It records and monitors within Ghost Mic.\n\nBACKGROUND CAPTURE\nCapture continues with an ongoing notification. Use Stop in the app or notification to end it. Nothing starts at boot.\n\nOPEN SOURCE\nRNNoise by Xiph.Org / Mozilla / Jean-Marc Valin, BSD license.\n";
-        try(InputStream stream=getAssets().open("RNNoise-LICENSE.txt")) {
-            ByteArrayOutputStream bytes=new ByteArrayOutputStream(); byte[] buffer=new byte[4096]; int count;
-            while((count=stream.read(buffer))!=-1) bytes.write(buffer,0,count);
-            explanation+="\n"+new String(bytes.toByteArray(),java.nio.charset.StandardCharsets.UTF_8);
-        } catch(IOException ignored) { }
+        for(String license:new String[]{"THIRD_PARTY_NOTICES.txt","RNNoise-LICENSE.txt","Apache-2.0.txt"}) {
+            try(InputStream stream=getAssets().open(license)) {
+                ByteArrayOutputStream bytes=new ByteArrayOutputStream(); byte[] buffer=new byte[4096]; int count;
+                while((count=stream.read(buffer))!=-1) bytes.write(buffer,0,count);
+                explanation+="\n\n"+new String(bytes.toByteArray(),java.nio.charset.StandardCharsets.UTF_8);
+            } catch(IOException ignored) { }
+        }
         ScrollView scroll=new ScrollView(this); TextView content=text(explanation,13,TEXT); content.setPadding(dp(20),dp(12),dp(20),dp(12)); scroll.addView(content);
         showDialog(new AlertDialog.Builder(this).setTitle("Ghost Mic for Android").setView(scroll).setPositiveButton("Close",null).create());
     }
