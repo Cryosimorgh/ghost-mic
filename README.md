@@ -4,7 +4,7 @@ A local Windows microphone controller with digital gain, live monitoring, and vi
 
 Companion project: [Ghost](https://github.com/Cryosimorgh/Ghost), the chat application. Ghost Mic is a separate application and does not require Ghost to run.
 
-An [Android version](android/README.md) is also available, focused on input-device selection, offline RNNoise denoising, recording, and live monitoring. Stock Android does not expose it as a virtual microphone to other apps. Android downloads are published separately from the Windows release.
+An [Android version](android/README.md) is also available: [download the APK](https://github.com/Cryosimorgh/ghost-mic/releases/download/android-v1.0.0/GhostMic-android.apk). It focuses on input-device selection, offline RNNoise denoising, recording, and live monitoring. Stock Android does not expose it as a virtual microphone to other apps. Android downloads are published separately from the Windows release.
 
 ![Ghost Mic desktop interface](https://raw.githubusercontent.com/Cryosimorgh/ghost-mic/main/docs/interface.png)
 
