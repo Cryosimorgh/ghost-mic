@@ -10,13 +10,13 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      ANDROID_SIGNING_STORE_FILE: ${{ runner.temp }}/ghostmic.p12
       ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -35,7 +35,8 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_STORE_BASE64 }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$ANDROID_SIGNING_STORE_FILE"; fi
+          echo "ANDROID_SIGNING_STORE_FILE=$RUNNER_TEMP/ghostmic.p12" >> "$GITHUB_ENV"
+          if [ -n "$KEYSTORE_BASE64" ]; then printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/ghostmic.p12"; fi
       - name: Build, unit test and lint
         run: gradle -p android :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease :app:testDebugUnitTest :app:lintDebug --stacktrace
       - name: Package APKs
