@@ -34,11 +34,17 @@ public final class MainActivity extends Activity {
         super.onCreate(saved); preferences=getSharedPreferences("ghost-mic",MODE_PRIVATE); audio=getSystemService(AudioManager.class);
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
         ScrollView scroll=new ScrollView(this); scroll.setFillViewport(true); scroll.setBackgroundColor(BG);
-        LinearLayout root=column(); root.setPadding(dp(20),dp(16),dp(20),dp(28)); scroll.addView(root); setContentView(scroll);
+        LinearLayout root=column(); root.setPadding(dp(20),dp(16),dp(20),dp(16)); scroll.addView(root);
+        LinearLayout shell=column(); shell.setBackgroundColor(BG); shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        LinearLayout footer=column(); footer.setPadding(dp(20),dp(10),dp(20),dp(16)); footer.setBackgroundColor(BG); shell.addView(footer,wide(-2)); setContentView(shell);
         if (Build.VERSION.SDK_INT>=30) {
             getWindow().setDecorFitsSystemWindows(false);
-            scroll.setOnApplyWindowInsetsListener((view,insets) -> { android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars()); root.setPadding(dp(20)+bars.left,dp(16)+bars.top,dp(20)+bars.right,dp(24)+bars.bottom); return insets; });
-        } else scroll.setFitsSystemWindows(true);
+            shell.setOnApplyWindowInsetsListener((view,insets) -> {
+                android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars());
+                root.setPadding(dp(20)+bars.left,dp(16)+bars.top,dp(20)+bars.right,dp(16));
+                footer.setPadding(dp(20)+bars.left,dp(10),dp(20)+bars.right,dp(12)+bars.bottom); return insets;
+            });
+        } else shell.setFitsSystemWindows(true);
         LinearLayout heading=row(); TextView title=text("Ghost Mic",26,TEXT); title.setTypeface(Typeface.create("sans-serif-medium",Typeface.NORMAL)); heading.addView(title,new LinearLayout.LayoutParams(0,dp(44),1));
         badge=text("● Standby",12,MUTED); badge.setGravity(Gravity.CENTER_VERTICAL|Gravity.END); heading.addView(badge,new LinearLayout.LayoutParams(dp(90),dp(44)));
         Button help=button("?",false); help.setContentDescription("Help and open-source licenses"); help.setOnClickListener(view -> showHelp()); heading.addView(help,new LinearLayout.LayoutParams(dp(38),dp(38))); root.addView(heading);
@@ -79,10 +85,10 @@ public final class MainActivity extends Activity {
         space(listening,6); listening.addView(text("Use headphones to avoid feedback. Playback has some delay.",11,WARNING));
 
         LinearLayout actions=row(); start=button("Start",true); start.setId(START_ID); start.setOnClickListener(view -> requestCapture(false)); stop=button("Stop",false); stop.setId(STOP_ID); stop.setOnClickListener(view -> startService(new Intent(this,MicService.class).setAction(MicService.STOP)));
-        LinearLayout.LayoutParams primary=new LinearLayout.LayoutParams(0,dp(48),1); primary.setMargins(0,0,dp(8),0); actions.addView(start,primary); actions.addView(stop,new LinearLayout.LayoutParams(0,dp(48),1)); root.addView(actions); space(root,8);
-        LinearLayout recording=row(); record=button("Record WAV",false); record.setOnClickListener(view -> { if(MicService.state.running) startService(new Intent(this,MicService.class).setAction(MicService.RECORD)); else requestCapture(true); }); recording.addView(record,new LinearLayout.LayoutParams(0,dp(44),1));
-        Button files=button("Recordings",false); files.setOnClickListener(view -> showRecordings()); LinearLayout.LayoutParams right=new LinearLayout.LayoutParams(0,dp(44),1); right.setMargins(dp(8),0,0,0); recording.addView(files,right); root.addView(recording);
-        space(root,12); status=text("Choose your input, then start.",13,MUTED); root.addView(status);
+        record=button("Record WAV",false); record.setOnClickListener(view -> { if(MicService.state.running) startService(new Intent(this,MicService.class).setAction(MicService.RECORD)); else requestCapture(true); });
+        for(Button action:new Button[]{start,record,stop}) { LinearLayout.LayoutParams cell=new LinearLayout.LayoutParams(0,dp(48),1); if(action!=stop) cell.setMargins(0,0,dp(8),0); actions.addView(action,cell); } footer.addView(actions);
+        Button files=button("Recordings",false); files.setOnClickListener(view -> showRecordings()); root.addView(files,wide(44));
+        space(footer,10); status=text("Choose your input, then start.",12,MUTED); status.setMaxLines(3); footer.addView(status);
         space(root,12); root.addView(text("Android version: local recording and monitoring. Other apps cannot select Ghost Mic as a virtual microphone on stock Android.",11,MUTED));
         devices=new AudioDeviceCallback() { public void onAudioDevicesAdded(AudioDeviceInfo[] added) { refreshDevices(); } public void onAudioDevicesRemoved(AudioDeviceInfo[] removed) { refreshDevices(); } };
         refreshDevices(); renderState();
@@ -127,14 +133,14 @@ public final class MainActivity extends Activity {
         if(!missing.isEmpty()) { requestPermissions(missing.toArray(new String[0]),41); return; } beginCapture(save);
     }
     private boolean bluetoothSelected() {
-        String key=preferences.getString("input",""); return key.startsWith(AudioDeviceInfo.TYPE_BLUETOOTH_SCO+"|") || key.startsWith(AudioDeviceInfo.TYPE_BLE_HEADSET+"|");
+        String key=preferences.getString("input",""); return key.startsWith(AudioDeviceInfo.TYPE_BLUETOOTH_SCO+"|") || Build.VERSION.SDK_INT>=31 && key.startsWith(AudioDeviceInfo.TYPE_BLE_HEADSET+"|");
     }
     public void onRequestPermissionsResult(int code,String[] permissions,int[] results) {
         super.onRequestPermissionsResult(code,permissions,results);
         if(code==42 && pendingPicker) { pendingPicker=false; pickDevice(true); return; }
         if(code==41) {
-            if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED) { status.setText("Microphone access was denied. You can allow it in Android app settings."); return; }
-            if(Build.VERSION.SDK_INT>=31 && bluetoothSelected() && checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)!=PackageManager.PERMISSION_GRANTED) { status.setText("Allow Bluetooth access or select another input."); return; }
+            if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED) { MicService.state=MicEngine.State.idle("Microphone access was denied. Allow it in Android app settings.",MicService.state.recordingFile); return; }
+            if(Build.VERSION.SDK_INT>=31 && bluetoothSelected() && checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)!=PackageManager.PERMISSION_GRANTED) { MicService.state=MicEngine.State.idle("Allow Bluetooth access or select another input.",MicService.state.recordingFile); return; }
             beginCapture(pendingRecord);
         }
     }
@@ -145,7 +151,7 @@ public final class MainActivity extends Activity {
     }
     private void beginCapture(boolean save) {
         try { startForegroundService(processingIntent(MicService.START).putExtra("record",save)); }
-        catch(RuntimeException error) { status.setText("Could not start: "+error.getMessage()); }
+        catch(RuntimeException error) { MicService.state=MicEngine.State.idle("Could not start: "+error.getMessage(),MicService.state.recordingFile); }
     }
     private void updateProcessing() { if(MicService.state.running) startService(processingIntent(MicService.UPDATE)); }
     private void renderState() {
@@ -157,7 +163,7 @@ public final class MainActivity extends Activity {
         activeMicrophones.setText(state.microphoneInfo); inputMeter.peak=state.inputPeak; outputMeter.peak=state.outputPeak; inputMeter.invalidate(); outputMeter.invalidate();
         limiter.setText(String.format(Locale.US,"Limiter %.1f dB%s",state.limiter,state.inputPeak>=.999f?" · input clipping":""));
         badge.setText(state.running?(mute.isChecked()?"● Muted":state.recording?"● Recording":"● Live"):"● Standby"); badge.setTextColor(state.running?GREEN:MUTED);
-        if(!status.getText().toString().startsWith("Microphone access was denied") && !status.getText().toString().startsWith("Allow Bluetooth access")) status.setText(state.message);
+        status.setText(state.message);
         if(state.monitoring && !state.actualOutput.isEmpty()) outputName.setText("Active playback: "+state.actualOutput);
     }
     private void showRecordings() {

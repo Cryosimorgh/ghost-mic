@@ -18,7 +18,7 @@ final class Devices {
         return result;
     }
     private static int priority(int type) { return type == AudioDeviceInfo.TYPE_BUILTIN_MIC ? 0 : type == AudioDeviceInfo.TYPE_USB_DEVICE || type == AudioDeviceInfo.TYPE_USB_HEADSET ? 1 : bluetooth(type) ? 3 : 2; }
-    static boolean bluetooth(int type) { return type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO || type == AudioDeviceInfo.TYPE_BLE_HEADSET; }
+    static boolean bluetooth(int type) { return type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO || Build.VERSION.SDK_INT>=31 && type == AudioDeviceInfo.TYPE_BLE_HEADSET; }
     static String type(int type) {
         return switch (type) {
             case AudioDeviceInfo.TYPE_BUILTIN_MIC -> "Phone microphone";
